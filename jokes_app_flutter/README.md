@@ -1,4 +1,4 @@
-# jokes_app_flutter
+Welcome to Joker, the jokes app developed using flutter.
 
 Provides a collection of funny, witty, and entertaining jokes. Perfect for a quick laugh or exploring humor. Simple and user-friendly interface. Random joke generator for endless fun. Frequently updated with new jokes.
 
