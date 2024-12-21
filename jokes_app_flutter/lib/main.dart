@@ -11,6 +11,183 @@ class MyJokesApp extends StatelessWidget {
     return MaterialApp(
       title: 'Jokes App',
       theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      debugShowCheckedModeBanner: false,
+      home: JokesPage(),
+    );
+  }
+}
+
+class JokesPage extends StatefulWidget {
+  @override
+  _JokesPageState createState() => _JokesPageState();
+}
+
+class _JokesPageState extends State<JokesPage> {
+  final JokeService _jokeService = JokeService();
+  List<Map<String, dynamic>> _jokes = [];
+  Set<Map<String, dynamic>> _favoriteJokes = {};
+  bool _isLoading = false;
+  int _selectedIndex = 0;
+
+  Future<void> _fetchJokes() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final jokes = await _jokeService.fetchJokes();
+      setState(() {
+        _jokes = jokes;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch jokes: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _toggleFavorite(Map<String, dynamic> joke) {
+    setState(() {
+      if (_favoriteJokes.contains(joke)) {
+        _favoriteJokes.remove(joke);
+      } else {
+        _favoriteJokes.add(joke);
+      }
+    });
+  }
+
+  List<Widget> _pages() {
+    return [
+      // Jokes List Page
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'Welcome to the Jokes App!',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurpleAccent,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: _isLoading ? null : _fetchJokes,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            ),
+            child: _isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text('Fetch Jokes'),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _jokes.isEmpty
+                ? const Center(child: Text('No jokes fetched yet.'))
+                : ListView.builder(
+              itemCount: _jokes.length,
+              itemBuilder: (context, index) {
+                final joke = _jokes[index];
+                final isFavorite = _favoriteJokes.contains(joke);
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    title: Text(joke['type'] == 'single'
+                        ? joke['joke']
+                        : '${joke['setup']}\n\n${joke['delivery']}'),
+                    trailing: IconButton(
+                      icon: Icon(
+                        isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.grey,
+                      ),
+                      onPressed: () => _toggleFavorite(joke),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      // Favorites Page
+      _favoriteJokes.isEmpty
+          ? const Center(child: Text('No favorite jokes yet.'))
+          : ListView.builder(
+        itemCount: _favoriteJokes.length,
+        itemBuilder: (context, index) {
+          final joke = _favoriteJokes.elementAt(index);
+          return Card(
+            margin: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 8),
+            child: ListTile(
+              title: Text(joke['type'] == 'single'
+                  ? joke['joke']
+                  : '${joke['setup']}\n\n${joke['delivery']}'),
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(_selectedIndex == 0 ? 'Jokes' : 'Favorites'),
+          backgroundColor: Colors.deepPurpleAccent,
+        ),
+        body: _pages()[_selectedIndex],
+        bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: _onTabTapped,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Jokes',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.favorite),
+                label: 'Favorites',
+              ),
+            ],
+            ),
+        );
+  }
+}
+
+/*
+
+import 'package:flutter/material.dart';
+
+import 'joke_service.dart';
+
+void main() {
+  runApp(MyJokesApp());
+}
+
+class MyJokesApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Jokes App',
+      theme: ThemeData(
         primarySwatch: Colors.brown,
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: AppBarTheme(
@@ -115,7 +292,7 @@ class _JokesPageState extends State<JokesPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'Welcome to the Jokes App!',
+              'Welcome to Joker!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -200,3 +377,9 @@ class _JokesPageState extends State<JokesPage> {
     );
   }
 }
+
+
+ */
+
+
+
